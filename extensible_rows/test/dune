@@ -1,0 +1,4 @@
+(tests
+ (names test_runner)
+ (modules test_runner test_lexer test_infer test_parser)
+ (libraries ounit2 extensible_rows))
