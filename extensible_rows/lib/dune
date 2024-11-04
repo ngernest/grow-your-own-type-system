@@ -1,11 +1,11 @@
 (ocamllex
-  (modules lexer))
+ (modules lexer))
 
 (menhir
-  (modules parser))
+ (modules parser))
 
 (library
-  (name extensible_rows))
+ (name extensible_rows))
 
 (env
  (dev
