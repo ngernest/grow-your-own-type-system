@@ -1,3 +1,4 @@
+(** The type of record labels (represented as strings under the hood) *)
 type name = string
 
 type expr =
@@ -10,9 +11,15 @@ type expr =
   | RecordRestrict of expr * name (* deleting a label: `{r - a}` *)
   | RecordEmpty (* empty record: `{}` *)
 
+(** The type of type variables (De Bruijn indices) *)
 type id = int
+
+(** Free type variables are owned by [let]-expressions, which are identified 
+    with {i levels} (positive ints). A [level] is the De Bruijn level 
+    (nesting depth) of the owner [let]-expression. *)
 type level = int
 
+(** Types *)
 type ty =
   | TConst of name (* type constant: `int` or `bool` *)
   | TApp of ty * ty list (* type application: `list[int]` *)
@@ -25,7 +32,8 @@ type ty =
 and row = ty (* the kind of rows - empty row, row variable, or row extension *)
 and tvar = Unbound of id * level | Link of ty | Generic of id
 
-let string_of_expr expr : string =
+(** Pretty-prints an [expr] *)
+let string_of_expr (expr : expr) : string =
   let rec f is_simple = function
     | Var name -> name
     | Call (fn_expr, arg_list) ->
@@ -54,7 +62,8 @@ let string_of_expr expr : string =
       "{" ^ g (label ^ " = " ^ f false expr) record_expr ^ "}" in
   f false expr
 
-let string_of_ty ty : string =
+(** Pretty-prints a type *)
+let string_of_ty (ty : ty) : string =
   let id_name_map = Hashtbl.create 10 in
   let count = ref 0 in
   let next_name () =
