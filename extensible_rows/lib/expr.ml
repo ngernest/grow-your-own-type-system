@@ -24,7 +24,7 @@ type ty =
   | TConst of name (* type constant: `int` or `bool` *)
   | TApp of ty * ty list (* type application: `list[int]` *)
   | TArrow of ty list * ty (* function type: `(int, int) -> int` *)
-  | TVar of tvar ref (* type variable *)
+  | TVar of tvar ref (* type variables (mutable) *)
   | TRecord of row (* record type: `{<...>}` *)
   | TRowEmpty (* empty row: `<>` *)
   | TRowExtend of name * ty * row (* row extension: `<a : _ | ...>` *)

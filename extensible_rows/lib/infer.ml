@@ -24,10 +24,16 @@ let error msg = raise (Error msg)
 module Env = struct
   module StringMap = Map.Make (String)
 
+  (** Environments are maps from [string -> ty] *)
   type t = ty StringMap.t
 
+  (** The empty environment *)
   let empty : t = StringMap.empty
+
+  (** Extends the environment with a new variable binding [name : ty] *)
   let extend env name ty = StringMap.add name ty env
+
+  (** Lookups the type of [name] in the environment *)
   let lookup env name = StringMap.find name env
 end
 
@@ -84,6 +90,9 @@ let rec unify (ty1 : ty) (ty2 : ty) : unit =
       tvar := Link ty
     | TRecord row1, TRecord row2 -> unify row1 row2
     | TRowEmpty, TRowEmpty -> ()
+    (* If a row extension [<a : t | r>] is unified with another row,
+       [rewrite_row] rewrites the second row by searching for the first field
+       with label [a], and unifies its type with the field's type [t] *)
     | TRowExtend (label1, field_ty1, rest_row1), (TRowExtend _ as row2) ->
       let rest_row1_tvar_ref_option =
         match rest_row1 with
@@ -98,7 +107,10 @@ let rec unify (ty1 : ty) (ty2 : ty) : unit =
       error
         ("can't unify types " ^ string_of_ty ty1 ^ " and " ^ string_of_ty ty2)
 
-and rewrite_row row2 label1 field_ty1 =
+(** Rewrites a row variable [row2] by searching for the first field in 
+    [row2] that is equal to [label1], and unifies the field's type with 
+		the field type [field_ty1] *)
+and rewrite_row (row2 : row) (label1 : name) (field_ty1 : ty) : ty =
   match row2 with
   | TRowEmpty -> error ("row does not contain label " ^ label1)
   | TRowExtend (label2, field_ty2, rest_row2) when label2 = label1 ->
