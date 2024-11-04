@@ -29,7 +29,13 @@ type ty =
   | TRowEmpty (* empty row: `<>` *)
   | TRowExtend of name * ty * row (* row extension: `<a : _ | ...>` *)
 
-and row = ty (* the kind of rows - empty row, row variable, or row extension *)
+(** the kind of rows - empty row, row variable, or row extension *)
+and row = ty
+
+(** Type variables:
+    - [Unbound] (free) type variables are identified by their [id] & [level]
+    - When a free type variable is unifeid with a type [ty], 
+      the [tvar] is updated with a pointer [Link ty] *)
 and tvar = Unbound of id * level | Link of ty | Generic of id
 
 (** Pretty-prints an [expr] *)

@@ -2,14 +2,19 @@ open Expr
 
 let current_id = ref 0
 
+(** Increments the counter for type variables *)
 let next_id () =
   let id = !current_id in
   current_id := id + 1;
   id
 
 let reset_id () = current_id := 0
-let new_var level = TVar (ref (Unbound (next_id (), level)))
-let new_gen_var () = TVar (ref (Generic (next_id ())))
+
+(** Generates a free type variable at the current [level] *)
+let new_var (level : level) : ty = TVar (ref (Unbound (next_id (), level)))
+
+(** Generates a quantified type variable *)
+let new_gen_var () : ty = TVar (ref (Generic (next_id ())))
 
 exception Error of string
 
@@ -26,8 +31,14 @@ module Env = struct
   let lookup env name = StringMap.find name env
 end
 
-let occurs_check_adjust_levels tvar_id tvar_level ty =
-  let rec f = function
+(** Checks that the type variable [tvar_id] being unified 
+    doesn't occur within the type [ty] it is being unified with.
+		- This prevents us from inferring recursive types. 
+		- This function also updates the levels of type variables within 
+		  [ty], ensuring that [ty] becomes generalized correctly *)
+let occurs_check_adjust_levels (tvar_id : id) (tvar_level : level) (ty : ty) :
+  unit =
+  let rec f : ty -> unit = function
     | TVar { contents = Link ty } -> f ty
     | TVar { contents = Generic _ } -> assert false
     | TVar ({ contents = Unbound (other_id, other_level) } as other_tvar) ->
@@ -48,7 +59,8 @@ let occurs_check_adjust_levels tvar_id tvar_level ty =
     | TConst _ | TRowEmpty -> () in
   f ty
 
-let rec unify ty1 ty2 =
+(** Unifies two types *)
+let rec unify (ty1 : ty) (ty2 : ty) : unit =
   if ty1 == ty2 then ()
   else
     match (ty1, ty2) with
@@ -84,7 +96,7 @@ let rec unify ty1 ty2 =
       unify rest_row1 rest_row2
     | _, _ ->
       error
-        ("cannot unify types " ^ string_of_ty ty1 ^ " and " ^ string_of_ty ty2)
+        ("can't unify types " ^ string_of_ty ty1 ^ " and " ^ string_of_ty ty2)
 
 and rewrite_row row2 label1 field_ty1 =
   match row2 with
@@ -103,7 +115,7 @@ and rewrite_row row2 label1 field_ty1 =
   | _ -> error "row type expected"
 
 (** Takes a [level] [l] and a type [tau], and turns all type variables 
-    within [tau] that have level > [l] into unviersally-quantified 
+    within [tau] that have level > [l] into universally-quantified 
 		type variables *)
 let rec generalize (l : level) (tau : ty) : ty =
   match tau with
@@ -122,9 +134,10 @@ let rec generalize (l : level) (tau : ty) : ty =
     | TConst _ | TRowEmpty ) as ty ->
     ty
 
-let instantiate level ty =
+(** Transforms polymorphic type variables into normal unbound type variables *)
+let instantiate (level : level) (ty : ty) : ty =
   let id_var_map = Hashtbl.create 10 in
-  let rec f ty =
+  let rec f (ty : ty) : ty =
     match ty with
     | TConst _ -> ty
     | TVar { contents = Link ty } -> f ty
@@ -144,7 +157,9 @@ let instantiate level ty =
   in
   f ty
 
-let rec match_fun_ty num_params = function
+(** Helper function for inferring function types based on [num_params]
+    (the no. of arguments to the function) *)
+let rec match_fun_ty (num_params : int) : ty -> ty list * ty = function
   | TArrow (param_ty_list, return_ty) ->
     if List.length param_ty_list <> num_params then
       error "unexpected number of arguments"
@@ -161,6 +176,8 @@ let rec match_fun_ty num_params = function
     (param_ty_list, return_ty)
   | _ -> error "expected a function"
 
+(** Infers a type for an expression given the current environment 
+    and the level for let-generalization *)
 let rec infer (env : Env.t) (level : level) : expr -> ty = function
   | Var name -> (
     try instantiate level (Env.lookup env name)
