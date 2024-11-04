@@ -1,6 +1,7 @@
 Grow Your Own Type System
 =========================
 
+**Compilation instructions (note to self)**: `cd` into the `extensible_rows` subdirectory and run `dune build` there.     
 
 This repository contains implementations of different type systems in OCaml.
 
