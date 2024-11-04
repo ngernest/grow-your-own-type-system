@@ -1,0 +1,13 @@
+(ocamllex
+  (modules lexer))
+
+(menhir
+  (modules parser))
+
+(library
+  (name extensible_rows))
+
+(env
+ (dev
+  (flags
+   (:standard -g -w "-26-27-32-33-34-39"))))
