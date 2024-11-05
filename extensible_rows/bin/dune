@@ -1,4 +1,4 @@
 (executable
- (public_name extensible_rows)
+ (public_name main)
  (name main)
  (libraries extensible_rows))
