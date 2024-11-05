@@ -215,7 +215,7 @@ let make_single_test_case (code, expected_result) =
   Infer.reset_id ();
   let result =
     try OK (Parser.expr_eof Lexer.token (Lexing.from_string code))
-    with Parsing.Parse_error -> Fail in
+    with Parsing.Parse_error | Parser.Error -> Fail in
   assert_equal ~printer:string_of_result expected_result result;
   match result with
   | OK s_expr -> (
@@ -226,7 +226,7 @@ let make_single_test_case (code, expected_result) =
         OK (Parser.expr_eof Lexer.token (Lexing.from_string s_expr_str)) in
       assert_equal ~printer:string_of_result ~msg:"string_of_s_expr error"
         expected_result new_result
-    with Parsing.Parse_error ->
+    with Parsing.Parse_error | Parser.Error ->
       assert_failure ("string_of_s_expr parsing error: " ^ s_expr_str))
   | Fail -> ()
 
