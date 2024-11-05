@@ -1,10 +1,12 @@
 open Expr
 open Infer
 
-let core =
+(** The core typing environment, containing the types of built-in operations *)
+let core : Env.t =
   let core_ref = ref Env.empty in
 
-  let assume name ty_str =
+  (* Extends the environment with the type for a built-in function *)
+  let assume (name : string) (ty_str : string) : unit =
     let ty = Parser.ty_forall_eof Lexer.token (Lexing.from_string ty_str) in
     core_ref := Env.extend !core_ref name ty in
 
