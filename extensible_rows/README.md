@@ -1,8 +1,8 @@
-Extensible records with scoped labels
+Implementation of typed NetKAT with row polymorphism (WIP)
 =====================================
 
+Adapted
 
-This is an implementation of type inference for safe, polymorphic and extensible records.
 
 ## Compilation
 - Run `dune build` to compile
